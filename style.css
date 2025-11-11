@@ -1,0 +1,139 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Microsoft YaHei", sans-serif;
+}
+
+body {
+    background-color: #f5f5f5;
+    padding: 20px;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+h2 {
+    color: #333;
+    margin-bottom: 15px;
+    font-size: 18px;
+}
+
+.sensitive-section, .chat-section {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.input-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+input, textarea, button {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+input {
+    flex: 1;
+}
+
+textarea {
+    flex: 1;
+    resize: none;
+}
+
+button {
+    background-color: #008cff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    padding: 0 20px;
+}
+
+button:hover {
+    background-color: #0077dd;
+}
+
+.sensitive-list {
+    background-color: #f9f9f9;
+    padding: 15px;
+    border-radius: 5px;
+}
+
+/* 关键修改：添加敏感词数量显示样式 */
+#sensitiveWordCount {
+    margin-top: 10px;
+    padding: 8px 12px;
+    background-color: #e8f4ff;
+    color: #008cff;
+    border-radius: 20px;
+    font-size: 14px;
+    display: inline-block;
+}
+
+.message-container {
+    height: 300px;
+    overflow-y: auto;
+    background-color: #f9f9f9;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+
+.message-item {
+    margin-bottom: 12px;
+    padding: 10px;
+    background-color: white;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.message-item .time {
+    font-size: 11px;
+    color: #999;
+    margin-bottom: 5px;
+}
+
+.message-item .content {
+    font-size: 14px;
+    color: #333;
+}
+
+.message-item.filtered .content {
+    color: #ff4d4f;
+}
+
+.clear-btn {
+    background-color: #ff4d4f;
+    width: 100%;
+    padding: 12px;
+    font-size: 15px;
+}
+
+.clear-btn:hover {
+    background-color: #ff3333;
+}
+
+/* 适配移动端 */
+@media (max-width: 500px) {
+    .input-group {
+        flex-direction: column;
+    }
+    button {
+        width: 100%;
+    }
+    .message-container {
+        height: 250px;
+    }
+}
