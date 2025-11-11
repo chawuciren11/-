@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>实时消息互动</title>
+  <!-- 引入Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 引入Font Awesome -->
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  
+  <!-- 配置Tailwind -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#4F46E5',
+            secondary: '#10B981',
+            neutral: '#F3F4F6',
+            dark: '#1F2937'
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .message-enter {
+        animation: fadeIn 0.3s ease-out;
+      }
+      .panel-slide {
+        animation: slideIn 0.3s ease-out;
+      }
+      .btn-press {
+        transform: scale(0.98);
+      }
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes slideIn {
+      from { transform: translateX(100%); }
+      to { transform: translateX(0); }
+    }
+  </style>
+</head>
+
+<body class="font-sans bg-neutral text-dark min-h-screen flex flex-col">
+  <!-- 顶部导航 -->
+  <header class="bg-white shadow-sm sticky top-0 z-30">
+    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center space-x-2">
+        <i class="fa fa-comments text-primary text-xl"></i>
+        <h1 class="text-lg md:text-xl font-bold text-primary">实时消息互动</h1>
+      </div>
+      
+      <button id="adminBtn" class="bg-primary/10 hover:bg-primary/20 text-primary px-3 py-2 rounded-lg transition-all flex items-center space-x-1">
+        <i class="fa fa-shield"></i>
+        <span class="hidden sm:inline">管理</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- 主内容区 -->
+  <main class="flex-grow container mx-auto px-4 py-4 flex flex-col h-[calc(100vh-130px)]">
+    <!-- 消息显示区域 -->
+    <div class="flex-grow overflow-hidden flex flex-col">
+      <div class="bg-white rounded-lg shadow-sm p-3 mb-3">
+        <h2 class="text-sm md:text-base font-medium flex items-center">
+          <i class="fa fa-list-alt text-primary/70 mr-2"></i>消息列表
+          <span id="onlineIndicator" class="ml-2 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
+            <i class="fa fa-circle text-green-500 text-[8px] mr-1"></i>实时同步
+          </span>
+        </h2>
+      </div>
+      
+      <div id="messageList" class="flex-grow bg-white rounded-lg shadow-sm p-3 overflow-y-auto space-y-3 mb-3">
+        <!-- 消息将动态添加 -->
+        <div class="text-center text-gray-400 py-8">
+          <i class="fa fa-comment-o text-3xl mb-2 opacity-30"></i>
+          <p class="text-sm">还没有消息，发送第一条吧~</p>
+        </div>
+      </div>
+      
+      <!-- 消息输入区域 -->
+      <div class="bg-white rounded-lg shadow-sm p-3">
+        <form id="messageForm" class="flex flex-col space-y-2">
+          <textarea 
+            id="messageInput" 
+            placeholder="输入消息内容..." 
+            class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all resize-none text-sm"
+            rows="2"
+            maxlength="300"
+            required
+          ></textarea>
+          <div class="flex justify-between items-center">
+            <span id="charLimit" class="text-xs text-gray-400">0/300</span>
+            <button 
+              type="submit" 
+              class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg transition-all text-sm font-medium flex items-center space-x-1 active:btn-press"
+            >
+              <span>发送</span>
+              <i class="fa fa-paper-plane-o"></i>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <!-- 管理面板 (默认隐藏) -->
+  <div id="adminPanel" class="fixed inset-0 bg-black/50 z-50 hidden">
+    <div class="absolute right-0 top-0 bottom-0 w-full max-w-xs bg-white panel-slide flex flex-col">
+      <div class="p-4 border-b border-gray-100 flex justify-between items-center">
+        <h3 class="font-bold text-primary flex items-center">
+          <i class="fa fa-cog mr-2"></i>管理设置
+        </h3>
+        <button id="closeAdminBtn" class="text-gray-500 hover:text-gray-700 p-1">
+          <i class="fa fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="flex-grow p-4 space-y-5 overflow-y-auto">
+        <div>
+          <label for="sensitiveWord" class="block text-sm font-medium text-gray-700 mb-1">设置敏感词</label>
+          <div class="flex space-x-2">
+            <input 
+              type="password"  <!-- 敏感词输入不可见 -->
+              id="sensitiveWord" 
+              placeholder="输入需要过滤的词" 
+              class="flex-grow px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all text-sm"
+            >
+            <button id="saveSensitiveBtn" class="bg-secondary hover:bg-secondary/90 text-white px-3 py-2 rounded-lg transition-all active:btn-press">
+              <i class="fa fa-save"></i>
+            </button>
+          </div>
+          <p class="text-xs text-green-600 mt-1 hidden" id="saveSuccess">
+            <i class="fa fa-check"></i> 敏感词已保存
+          </p>
+        </div>
+        
+        <div class="pt-2 border-t border-gray-100">
+          <h4 class="text-sm font-medium text-gray-700 mb-2">当前状态</h4>
+          <div class="bg-neutral rounded-lg p-3 text-sm space-y-2">
+            <p>
+              <span class="text-gray-500">敏感词状态：</span>
+              <span id="sensitiveStatus">未设置</span>
+            </p>
+            <p>
+              <span class="text-gray-500">消息总数：</span>
+              <span id="totalMessages">0</span>
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="p-4 border-t border-gray-100">
+        <button id="clearAllBtn" class="w-full bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-lg transition-all text-sm flex items-center justify-center space-x-1 active:btn-press">
+          <i class="fa fa-trash-o"></i>
+          <span>清空所有消息</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // DOM元素
+    const messageForm = document.getElementById('messageForm');
+    const messageInput = document.getElementById('messageInput');
+    const messageList = document.getElementById('messageList');
+    const charLimit = document.getElementById('charLimit');
+    const sensitiveWordInput = document.getElementById('sensitiveWord');
+    const saveSensitiveBtn = document.getElementById('saveSensitiveBtn');
+    const saveSuccess = document.getElementById('saveSuccess');
+    const sensitiveStatus = document.getElementById('sensitiveStatus');
+    const totalMessages = document.getElementById('totalMessages');
+    const clearAllBtn = document.getElementById('clearAllBtn');
+    const adminBtn = document.getElementById('adminBtn');
+    const adminPanel = document.getElementById('adminPanel');
+    const closeAdminBtn = document.getElementById('closeAdminBtn');
+    
+    // 初始化数据存储
+    function initStorage() {
+      // 初始化敏感词（首次使用）
+      if (!localStorage.getItem('sensitive_word')) {
+        localStorage.setItem('sensitive_word', '');
+      }
+      
+      // 初始化消息列表（首次使用）
+      if (!localStorage.getItem('message_history')) {
+        localStorage.setItem('message_history', JSON.stringify([]));
+      }
+      
+      // 生成用户标识（每个访问者唯一）
+      if (!localStorage.getItem('user_id')) {
+        const userId = 'u' + Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+        localStorage.setItem('user_id', userId);
+      }
+      
+      // 加载现有数据
+      loadMessages();
+      updateSensitiveStatus();
+    }
+    
+    // 加载并显示消息
+    function loadMessages() {
+      const messages = JSON.parse(localStorage.getItem('message_history') || '[]');
+      const sensitiveWord = localStorage.getItem('sensitive_word') || '';
+      
+      // 清空列表
+      messageList.innerHTML = '';
+      
+      // 无消息时显示提示
+      if (messages.length === 0) {
+        messageList.innerHTML = `
+          <div class="text-center text-gray-400 py-8">
+            <i class="fa fa-comment-o text-3xl mb-2 opacity-30"></i>
+            <p class="text-sm">还没有消息，发送第一条吧~</p>
+          </div>
+        `;
+        totalMessages.textContent = '0';
+        return;
+      }
+      
+      // 显示所有消息
+      messages.forEach(msg => {
+        const messageEl = document.createElement('div');
+        messageEl.className = 'message-enter bg-neutral rounded-lg p-3';
+        
+        // 过滤敏感词
+        let displayContent = msg.content;
+        if (sensitiveWord) {
+          const regex = new RegExp(sensitiveWord, 'g');
+          displayContent = displayContent.replace(regex, '*'.repeat(sensitiveWord.length));
+        }
+        
+        // 格式化时间
+        const time = new Date(msg.timestamp);
+        const formattedTime = `${time.getHours().toString().padStart(2, '0')}:${time.getMinutes().toString().padStart(2, '0')}`;
+        
+        messageEl.innerHTML = `
+          <div class="flex items-start">
+            <div class="w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold mr-2 flex-shrink-0">
+              ${msg.user.charAt(2).toUpperCase()}
+            </div>
+            <div class="flex-grow">
+              <div class="flex items-center mb-1">
+                <span class="text-xs font-medium">${msg.user}</span>
+                <span class="text-xs text-gray-400 ml-2">${formattedTime}</span>
+              </div>
+              <p class="text-sm whitespace-pre-wrap">${displayContent}</p>
+            </div>
+          </div>
+        `;
+        
+        messageList.appendChild(messageEl);
+      });
+      
+      // 更新消息计数
+      totalMessages.textContent = messages.length.toString();
+      
+      // 滚动到底部
+      messageList.scrollTop = messageList.scrollHeight;
+    }
+    
+    // 发送消息
+    function sendNewMessage(content) {
+      const messages = JSON.parse(localStorage.getItem('message_history') || '[]');
+      const userId = localStorage.getItem('user_id');
+      
+      const newMessage = {
+        id: Date.now().toString(),
+        user: userId,
+        content: content,
+        timestamp: new Date().toISOString()
+      };
+      
+      // 添加到消息列表
+      messages.push(newMessage);
+      
+      // 保存到本地存储（实际应用中应发送到服务器）
+      localStorage.setItem('message_history', JSON.stringify(messages));
+      
+      // 触发存储事件以同步其他标签页
+      const event = new Event('storage');
+      window.dispatchEvent(event);
+    }
+    
+    // 保存敏感词
+    function saveSensitiveWord() {
+      const word = sensitiveWordInput.value.trim();
+      localStorage.setItem('sensitive_word', word);
+      
+      // 显示成功提示
+      saveSuccess.classList.remove('hidden');
+      setTimeout(() => {
+        saveSuccess.classList.add('hidden');
+      }, 2000);
+      
+      // 清空输入框（增强隐私）
+      sensitiveWordInput.value = '';
+      
+      // 更新状态并重新加载消息
+      updateSensitiveStatus();
+      loadMessages();
+    }
+    
+    // 更新敏感词状态显示
+    function updateSensitiveStatus() {
+      const word = localStorage.getItem('sensitive_word') || '';
+      sensitiveStatus.textContent = word ? '已设置' : '未设置';
+    }
+    
+    // 清空所有消息
+    function clearAllMessages() {
+      if (confirm('确定要清空所有消息吗？此操作不可恢复。')) {
+        localStorage.setItem('message_history', JSON.stringify([]));
+        loadMessages();
+      }
+    }
+    
+    // 更新字符计数
+    function updateCharCount() {
+      const count = messageInput.value.length;
+      charLimit.textContent = `${count}/300`;
+      
+      // 超过限制时截断
+      if (count > 300) {
+        messageInput.value = messageInput.value.substring(0, 300);
+        updateCharCount();
+      }
+    }
+    
+    // 事件监听
+    messageForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const content = messageInput.value.trim();
+      
+      if (content) {
+        sendNewMessage(content);
+        messageInput.value = '';
+        updateCharCount();
+      }
+    });
+    
+    saveSensitiveBtn.addEventListener('click', saveSensitiveWord);
+    clearAllBtn.addEventListener('click', clearAllMessages);
+    messageInput.addEventListener('input', updateCharCount);
+    
+    // 管理面板控制
+    adminBtn.addEventListener('click', () => {
+      adminPanel.classList.remove('hidden');
+      document.body.style.overflow = 'hidden'; // 防止背景滚动
+    });
+    
+    closeAdminBtn.addEventListener('click', () => {
+      adminPanel.classList.add('hidden');
+      document.body.style.overflow = '';
+    });
+    
+    // 点击面板外部关闭
+    adminPanel.addEventListener('click', (e) => {
+      if (e.target === adminPanel) {
+        adminPanel.classList.add('hidden');
+        document.body.style.overflow = '';
+      }
+    });
+    
+    // 监听存储变化，实现多标签页同步
+    window.addEventListener('storage', () => {
+      loadMessages();
+      updateSensitiveStatus();
+    });
+    
+    // 初始化
+    initStorage();
+  </script>
+</body>
+</html>
